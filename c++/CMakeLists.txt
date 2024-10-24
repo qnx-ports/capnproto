@@ -28,6 +28,7 @@ set(INSTALL_TARGETS_DEFAULT_ARGS
 
 option(EXTERNAL_CAPNP "Use the system capnp binary, or the one specified in $CAPNP, instead of using the compiled one." OFF)
 option(CAPNP_LITE "Compile Cap'n Proto in 'lite mode', in which all reflection APIs (schema.h, dynamic.h, etc.) are not included. Produces a smaller library at the cost of features. All programs built against the library must be compiled with -DCAPNP_LITE. Requires EXTERNAL_CAPNP." OFF)
+option(INSTALL_TESTS "Install Cap'n Proto tests" OFF)
 
 # Check for invalid combinations of build options
 if(CAPNP_LITE AND BUILD_TESTING AND NOT EXTERNAL_CAPNP)

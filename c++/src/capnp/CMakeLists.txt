@@ -277,6 +277,9 @@ if(BUILD_TESTING)
   add_dependencies(capnp-tests test_capnp)
   add_dependencies(check capnp-tests)
   add_test(NAME capnp-tests-run COMMAND capnp-tests)
+  if(INSTALL_TESTS)
+    install(TARGETS capnp-tests DESTINATION bin/)
+  endif()
 
   if(NOT CAPNP_LITE)
     add_executable(capnp-heavy-tests
@@ -316,6 +319,8 @@ if(BUILD_TESTING)
     target_link_libraries(capnp-evolution-tests capnpc capnp kj)
     add_dependencies(check capnp-evolution-tests)
     add_test(NAME capnp-evolution-tests-run COMMAND capnp-evolution-tests)
+    if(INSTALL_TESTS)
+      install(TARGETS capnp-heavy-tests capnp-evolution-tests DESTINATION bin/)
   endif()  # NOT CAPNP_LITE
 endif()  # BUILD_TESTING
 

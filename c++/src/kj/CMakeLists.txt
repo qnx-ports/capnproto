@@ -261,6 +261,10 @@ if(BUILD_TESTING)
   target_link_libraries(kj-tests kj-test kj)
   add_dependencies(check kj-tests)
   add_test(NAME kj-tests-run COMMAND kj-tests)
+  if(INSTALL_TESTS)
+    install(TARGETS kj-tests DESTINATION bin/)
+  endif()
+
 
   if(NOT CAPNP_LITE)
     add_executable(kj-heavy-tests
@@ -310,5 +314,8 @@ if(BUILD_TESTING)
     endif()
     add_dependencies(check kj-heavy-tests)
     add_test(NAME kj-heavy-tests-run COMMAND kj-heavy-tests)
+    if(INSTALL_TESTS)
+      install(TARGETS kj-heavy-tests DESTINATION bin/)
+    endif()
   endif()  # NOT CAPNP_LITE
 endif()  # BUILD_TESTING
