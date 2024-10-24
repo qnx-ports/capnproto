@@ -1239,7 +1239,8 @@ Promise<Array<SocketAddress>> SocketAddress::lookupHost(
 #if __BIONIC__
       // AI_V4MAPPED causes getaddrinfo() to fail on Bionic libc (Android).
       hints.ai_flags = AI_ADDRCONFIG;
-#else
+#elif !defined(__QNX__)
+      // AI_V4MAPPED and AI_ADDRCONFIG do not exist on QNX.
       hints.ai_flags = AI_V4MAPPED | AI_ADDRCONFIG;
 #endif
       struct addrinfo* list;
@@ -1357,8 +1358,8 @@ public:
               ownFd.get(), IPPROTO_TCP, TCP_NODELAY, (char*)&one, sizeof(one))) {
           case EOPNOTSUPP:
           case ENOPROTOOPT: // (returned for AF_UNIX in cygwin)
-#if __FreeBSD__
-          case EINVAL: // (returned for AF_UNIX in FreeBSD)
+#if __FreeBSD__ || __QNX__
+          case EINVAL: // (returned for AF_UNIX in FreeBSD and QNX)
 #endif
             break;
           default:

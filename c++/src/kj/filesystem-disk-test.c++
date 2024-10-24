@@ -235,7 +235,7 @@ public:
 
   Own<Directory> get() {
     int fd;
-    KJ_SYSCALL(fd = open(filename.cStr(), O_RDONLY));
+    KJ_SYSCALL(fd = open(filename.cStr(), O_RDONLY | O_DIRECTORY));
     return newDiskDirectory(AutoCloseFd(fd));
   }
 
@@ -346,6 +346,7 @@ KJ_TEST("DiskFile") {
     KJ_EXPECT(kj::str(writableMapping->get().slice(0, 6).asChars()) == "fDobaz");
     KJ_EXPECT(kj::str(privateMapping.slice(0, 6).asChars()) == "Foobaz");
 
+#if !__QNX__ // Usage of write() with writable mmap() is unsupported on QNX
     file->write(0, StringPtr("qux").asBytes());
     KJ_EXPECT(kj::str(mapping.slice(0, 6).asChars()) == "quxbaz");
     KJ_EXPECT(kj::str(writableMapping->get().slice(0, 6).asChars()) == "quxbaz");
@@ -353,6 +354,7 @@ KJ_TEST("DiskFile") {
 
     file->write(12, StringPtr("corge").asBytes());
     KJ_EXPECT(kj::str(mapping.slice(12, 17).asChars()) == "corge");
+#endif
 
 #if !_WIN32 && !__CYGWIN__  // Windows doesn't allow the file size to change while mapped.
     // Can shrink.
@@ -370,9 +372,17 @@ KJ_TEST("DiskFile") {
 
   file->truncate(6);
 
+#if !__QNX__
   KJ_EXPECT(file->readAllText() == "quxbaz");
+#else
+  KJ_EXPECT(file->readAllText() == "fDobaz");
+#endif
   file->zero(3, 3);
+#if !__QNX__
   KJ_EXPECT(file->readAllText() == StringPtr("qux\0\0\0", 6));
+#else
+  KJ_EXPECT(file->readAllText() == StringPtr("fDo\0\0\0", 6));
+#endif
 }
 
 KJ_TEST("DiskFile::copy()") {
@@ -765,7 +775,9 @@ KJ_TEST("DiskDirectory replaceSubdir()") {
     KJ_EXPECT(!dir->exists(Path({"foo", "bar"})));
 
     replacer->commit();
+#if !__QNX__ // QNX invalidates dirfd after rename
     KJ_EXPECT(replacer->get().openFile(Path("bar"))->readAllText() == "original");
+#endif
     KJ_EXPECT(dir->openFile(Path({"foo", "bar"}))->readAllText() == "original");
   }
 
@@ -985,7 +997,7 @@ KJ_TEST("DiskFilesystem::computeCurrentPath") {
     "some_path_longer_than_256_bytes"
   }), WriteMode::CREATE | WriteMode::CREATE_PARENT);
 
-  auto origDir = open(".", O_RDONLY);
+  auto origDir = open(".", O_RDONLY | O_DIRECTORY);
   KJ_SYSCALL(fchdir(KJ_ASSERT_NONNULL(subdir->getFd())));
   KJ_DEFER(KJ_SYSCALL(fchdir(origDir)));
 

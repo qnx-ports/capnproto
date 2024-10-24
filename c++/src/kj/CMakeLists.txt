@@ -81,8 +81,11 @@ add_library(CapnProto::kj ALIAS kj)
 # TODO(cleanup): Use cxx_std_14 once it's safe to require cmake 3.8.
 target_compile_features(kj PUBLIC cxx_generic_lambdas)
 
-if(UNIX AND NOT ANDROID)
+if(UNIX AND NOT (ANDROID OR QNX))
   target_link_libraries(kj PUBLIC pthread)
+endif()
+if(QNX)
+  target_link_libraries(kj PUBLIC socket)
 endif()
 #make sure the lite flag propagates to all users (internal + external) of this library
 target_compile_definitions(kj PUBLIC ${CAPNP_LITE_FLAG})
@@ -150,7 +153,7 @@ if(NOT CAPNP_LITE)
     target_compile_definitions(kj-async PUBLIC KJ_USE_FIBERS=0)
   endif()
 
-  if(UNIX)
+  if(UNIX AND NOT QNX)
     # external clients of this library need to link to pthreads
     target_compile_options(kj-async INTERFACE "-pthread")
   elseif(WIN32)

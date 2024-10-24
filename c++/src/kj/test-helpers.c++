@@ -45,7 +45,7 @@ bool hasSubstring(StringPtr haystack, StringPtr needle) {
     // Hell, doing a query for an embedded null & dispatching to strstr is still cheaper & only
     // marginally slower than the purely naiive implementation.
 
-#if !defined(_WIN32)
+#if !defined(_WIN32) && !defined(__QNX__)
     return memmem(haystack.begin(), haystack.size(), needle.begin(), needle.size()) != nullptr;
 #else
     // TODO(perf): This is not the best algorithm for substring matching. strstr can't be used

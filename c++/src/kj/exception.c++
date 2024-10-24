@@ -49,6 +49,9 @@
 #ifndef _WIN32
 #include <sys/mman.h>
 #endif
+#ifdef __QNX__
+#include <sys/nto_version.h>
+#endif
 #include "io.h"
 
 #if !KJ_NO_RTTI
@@ -580,8 +583,9 @@ void printStackTraceOnCrash() {
 #endif
 }
 
-#elif _WIN32
+#elif _WIN32 || (__QNX__ && _NTO_VERSION < 800)
 // Windows, but KJ_USE_WIN32_DBGHELP is not enabled. We can't print useful stack traces, so don't
+// or QNX (before 8.0.0), where no sigaltstack support is present
 // try to catch SEH nor ctrl+C.
 
 void printStackTraceOnCrash() {
@@ -1236,7 +1240,7 @@ struct FakeEhGlobals {
 
 // LLVM's libstdc++ doesn't declare __cxa_get_globals in its cxxabi.h. GNU does. Because it is
 // extern "C", the compiler wills get upset if we re-declare it even in a different namespace.
-#if _LIBCPPABI_VERSION
+#if _LIBCPPABI_VERSION || defined(__QNX__)
 extern "C" void* __cxa_get_globals();
 #else
 using abi::__cxa_get_globals;

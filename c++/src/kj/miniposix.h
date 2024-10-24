@@ -132,6 +132,10 @@ static constexpr inline size_t iovMax() {
 static constexpr inline size_t iovMax() {
   return UIO_MAX_IOV;
 }
+#elif defined(__QNX__)
+static constexpr inline size_t iovMax() {
+  return 1024;
+}
 #else
 #error "Please determine the appropriate constant for IOV_MAX on your system."
 #endif

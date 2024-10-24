@@ -416,8 +416,8 @@ public:
 
     static const byte ZEROS[4096] = { 0 };
 
-#if __APPLE__ || __CYGWIN__ || (defined(__ANDROID__) && __ANDROID_API__ < 24)
-    // Mac & Cygwin & Android API levels 23 and lower doesn't have pwritev().
+#if __APPLE__ || __CYGWIN__ || defined(__QNX__) || (defined(__ANDROID__) && __ANDROID_API__ < 24)
+    // Mac & Cygwin & QNX & Android API levels 23 and lower doesn't have pwritev().
     while (size > sizeof(ZEROS)) {
       write(offset, ZEROS);
       size -= sizeof(ZEROS);
@@ -672,8 +672,10 @@ public:
   template <typename Func>
   auto list(bool needTypes, Func&& func) const
       -> Array<Decay<decltype(func(instance<StringPtr>(), instance<FsNode::Type>()))>> {
+#if !__QNX__
     // Seek to start of directory.
     KJ_SYSCALL(lseek(fd, 0, SEEK_SET));
+#endif
 
     // Unfortunately, fdopendir() takes ownership of the file descriptor. Therefore we need to
     // make a duplicate.

@@ -573,6 +573,17 @@ TEST(AsyncUnixTest, WriteObserver) {
     KJ_NONBLOCKING_SYSCALL(n = write(outfd, "foo", 3));
   } while (n >= 0);
 
+#ifdef __QNX__
+  // On QNX, there is a user-customizable "atomic write size" for pipes
+  // writes below this size either succeed or fail as a whole; there
+  // is no "partial writes" when atomic. As a result, to truly fill
+  // the buffer, we need to add as many 1 bytes as possible after we
+  // are done with filling the buffer the normal way.
+  do {
+    KJ_NONBLOCKING_SYSCALL(n = write(outfd, "a", 1));
+  } while (n >= 0);
+#endif
+
   bool writable = false;
   auto promise = observer.whenBecomesWritable()
       .then([&]() { writable = true; }).eagerlyEvaluate(nullptr);
@@ -599,7 +610,7 @@ TEST(AsyncUnixTest, WriteObserver) {
   EXPECT_TRUE(writable);
 }
 
-#if !__APPLE__ && !(KJ_USE_KQUEUE && !defined(EVFILT_EXCEPT))
+#if !__APPLE__ && !__QNX__ && !(KJ_USE_KQUEUE && !defined(EVFILT_EXCEPT))
 // Disabled on macOS due to https://github.com/capnproto/capnproto/issues/374.
 // Disabled on kqueue systems that lack EVFILT_EXCEPT because it doesn't work there.
 TEST(AsyncUnixTest, UrgentObserver) {
@@ -978,6 +989,7 @@ KJ_TEST("UnixEventPort whenWriteDisconnected()") {
   hupPromise.wait(waitScope);
 }
 
+#ifndef __QNX__
 KJ_TEST("UnixEventPort FdObserver(..., flags=0)::whenWriteDisconnected()") {
   // Verifies that given `0' as a `flags' argument,
   // FdObserver still observes whenWriteDisconnected().
@@ -1004,7 +1016,7 @@ KJ_TEST("UnixEventPort FdObserver(..., flags=0)::whenWriteDisconnected()") {
   KJ_ASSERT(hupPromise.poll(waitScope));
   hupPromise.wait(waitScope);
 }
-
+#endif
 #endif
 
 KJ_TEST("UnixEventPort poll for signals") {
