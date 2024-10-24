@@ -321,6 +321,7 @@ if(BUILD_TESTING)
     add_test(NAME capnp-evolution-tests-run COMMAND capnp-evolution-tests)
     if(INSTALL_TESTS)
       install(TARGETS capnp-heavy-tests capnp-evolution-tests DESTINATION bin/)
+    endif()
   endif()  # NOT CAPNP_LITE
 endif()  # BUILD_TESTING
 
